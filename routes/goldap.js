@@ -47,7 +47,7 @@ function  get_user_dn(user, callback) {
         attributes: ['dn']
     };
 
-    client.search('ou='+CONFIG.ldap.ou_people+',' + CONFIG.ldap.dn, opts, function(err, res) {
+    client.search('ou=people,' + CONFIG.ldap.dn, opts, function(err, res) {
         if(err) {
             logger.error('Could not find ' + uid, err);
             callback(err);
@@ -79,7 +79,7 @@ module.exports = {
 
   reset_password: function(user, fid, callback){
 
-      var cur_user_dn = "uid="+user.uid+",ou="+CONFIG.ldap.ou_people+","+CONFIG.ldap.dn;
+      var cur_user_dn = "uid="+user.uid+",ou=people,"+CONFIG.ldap.dn;
       get_user_dn(user, function (err, res){
 	  if (err)
 	  {
@@ -179,7 +179,7 @@ module.exports = {
     -
     delete: description
     */
-      cur_user_dn = "uid="+user.uid+",ou="+CONFIG.ldap.ou_people+","+CONFIG.ldap.dn;
+      cur_user_dn = "uid="+user.uid+",ou=people,"+CONFIG.ldap.dn;
       get_user_dn(user, function (err, res){
 	  if (err)
 	  {
