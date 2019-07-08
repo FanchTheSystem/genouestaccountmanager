@@ -232,6 +232,15 @@ var create_extra_user = function(user_name, group, internal_user){
                     var script_file = CONFIG.general.script_dir+'/'+user.uid+"."+fid+".update";
                     fs.writeFile(script_file, script, function(err) {
                       fs.chmodSync(script_file,0o755);
+
+                      // todo: remove this as it is for template test only
+                      try {
+                        file.create_ssh_config(user);
+                      }
+                      catch (err) {
+                        logger.error('template test', err);
+                      }
+
                         var plugin_call = function(plugin_info, userId, data, adminId){
                             return new Promise(function (resolve, reject){
                                 plugins_modules[plugin_info.name].activate(userId, data, adminId).then(function(){
