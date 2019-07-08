@@ -25,6 +25,7 @@ var cookieParser = require('cookie-parser');
 var goldap = require('../routes/goldap.js');
 var notif = require('../routes/notif.js');
 var utils = require('../routes/utils.js');
+var file = require('../routes/file.js');
 
 // var get_ip = require('ipware')().get_ip;
 
