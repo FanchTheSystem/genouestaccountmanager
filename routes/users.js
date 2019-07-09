@@ -233,14 +233,6 @@ var create_extra_user = function(user_name, group, internal_user){
                     fs.writeFile(script_file, script, function(err) {
                       fs.chmodSync(script_file,0o755);
 
-                      // todo: remove this as it is for template test only
-                      try {
-                        file.create_ssh_config(user);
-                      }
-                      catch (err) {
-                        logger.error('template test', err);
-                      }
-
                         var plugin_call = function(plugin_info, userId, data, adminId){
                             return new Promise(function (resolve, reject){
                                 plugins_modules[plugin_info.name].activate(userId, data, adminId).then(function(){
@@ -499,7 +491,7 @@ router.clear_user_groups = function(user, admin_user_id){
       if(group){
         users_db.find({'$or': [{'secondarygroups': group.name}, {'group': group.name}]}, function(err, users_in_group){
           if(users_in_group && users_in_group.length == 0){
-	    router.delete_group(group, admin_user_id);
+            router.delete_group(group, admin_user_id);
           }
         });
       }
@@ -904,7 +896,7 @@ router.delete_user = function(user, action_owner_id){
                  }).then(function(){
                      resolve(true);
                  });
-		 router.clear_user_groups(user, action_owner_id);
+                 router.clear_user_groups(user, action_owner_id);
              });
          }
          else {
@@ -932,7 +924,7 @@ router.delete_user = function(user, action_owner_id){
                      resolve(false);
                      return;
                    }
-		   router.clear_user_groups(user, action_owner_id);
+                   router.clear_user_groups(user, action_owner_id);
                    var msg_activ ="User " + user.uid + " has been deleted by " + action_owner_id;
                    var msg_activ_html = msg_activ;
                    var mailOptions = {
@@ -1769,52 +1761,59 @@ router.get('/user/:id/renew', function(req, res){
 
 
 router.put('/user/:id/ssh', function(req, res) {
-  var sess = req.session;
-  if(! req.locals.logInfo.is_logged) {
-    res.status(401).send('Not authorized');
-    return;
-  }
-  users_db.findOne({_id: req.locals.logInfo.id}, function(err, session_user){
-      if(GENERAL_CONFIG.admin.indexOf(session_user.uid) >= 0) {
-        session_user.is_admin = true;
-      }
-      else {
-        session_user.is_admin = false;
-      }
-
-      users_db.findOne({uid: req.param('id')}, function(err, user){
-        // If not admin nor logged user
-        if(!session_user.is_admin && user._id.str != req.locals.logInfo.id.str) {
-          res.status(401).send('Not authorized');
-          return;
+    var sess = req.session;
+    if(! req.locals.logInfo.is_logged) {
+        res.status(401).send('Not authorized');
+        return;
+    }
+    users_db.findOne({_id: req.locals.logInfo.id}, function(err, session_user){
+        if(GENERAL_CONFIG.admin.indexOf(session_user.uid) >= 0) {
+            session_user.is_admin = true;
         }
-        // Update SSH Key
-        users_db.update({_id: user._id}, {'$set': {ssh: req.param('ssh')}}, function(err){
-          user.ssh = escapeshellarg(req.param('ssh'));
-          var script = "#!/bin/bash\n";
-          script += "set -e \n";
-          script += "if [ ! -e ~"+user.uid+"/.ssh ]; then\n";
-          script += "  mkdir -p ~"+user.uid+"/.ssh\n";
-          script += "  chmod -R 700 ~"+user.uid+"/.ssh\n";
-          script += "  touch  ~"+user.uid+"/.ssh/authorized_keys\n";
-          script += "  chown -R "+user.uidnumber+":"+user.gidnumber+" ~"+user.uid+"/.ssh/\n";
-          script += "fi\n";
-          script += "echo "+user.ssh+" >> ~"+user.uid+"/.ssh/authorized_keys\n";
-          var fid = new Date().getTime();
-          var script_file = CONFIG.general.script_dir+'/'+user.uid+"."+fid+".update";
-          fs.writeFile(script_file, script, function(err) {
-            events_db.insert({'owner': session_user.uid,'date': new Date().getTime(), 'action': 'SSH key update: ' + req.param('id') , 'logs': [user.uid+"."+fid+".update"]}, function(err){});
+        else {
+            session_user.is_admin = false;
+        }
 
-            fs.chmodSync(script_file,0o755);
-            user.fid = fid;
-            user.ssh = req.param('ssh');
-            res.send(user);
-            res.end();
-            return;
-          });
+        users_db.findOne({uid: req.param('id')}, function(err, user){
+            // If not admin nor logged user
+            if(!session_user.is_admin && user._id.str != req.locals.logInfo.id.str) {
+                res.status(401).send('Not authorized');
+                return;
+            }
+            // Update SSH Key
+            users_db.update({_id: user._id}, {'$set': {ssh: req.param('ssh')}}, function(err){
+                user.ssh = escapeshellarg(req.param('ssh'));
+                var script = "#!/bin/bash\n";
+                script += "set -e \n";
+                script += "if [ ! -e ~"+user.uid+"/.ssh ]; then\n";
+                script += "  mkdir -p ~"+user.uid+"/.ssh\n";
+                script += "  chmod -R 700 ~"+user.uid+"/.ssh\n";
+                script += "  touch  ~"+user.uid+"/.ssh/authorized_keys\n";
+                script += "  chown -R "+user.uidnumber+":"+user.gidnumber+" ~"+user.uid+"/.ssh/\n";
+                script += "fi\n";
+                script += "echo "+user.ssh+" >> ~"+user.uid+"/.ssh/authorized_keys\n";
+                var fid = new Date().getTime();
+                var script_file = CONFIG.general.script_dir+'/'+user.uid+"."+fid+".update";
+                fs.writeFile(script_file, script, function(err) {
+                    events_db.insert({'owner': session_user.uid,'date': new Date().getTime(), 'action': 'SSH key update: ' + req.param('id') , 'logs': [user.uid+"."+fid+".update"]}, function(err){});
 
+                    fs.chmodSync(script_file,0o755);
+                    user.fid = fid;
+                    user.ssh = req.param('ssh');
+                    res.send(user);
+                    res.end();
+                    return;
+                });
+
+                // todo: remove this as it is for template test only
+                try {
+                    file.create_ssh_config(user);
+                }
+                catch (err) {
+                    logger.error('template test', err);
+                }
+            });
         });
-      });
     });
 });
 
@@ -1822,8 +1821,8 @@ router.put('/user/:id/ssh', function(req, res) {
 router.get('/user/:id/usage', function(req, res){
     var sess = req.session;
     if(! req.locals.logInfo.is_logged) {
-      res.status(401).send('Not authorized');
-      return;
+        res.status(401).send('Not authorized');
+        return;
     }
     users_db.findOne({_id: req.locals.logInfo.id}, function(err, session_user){
         usage=JSON.parse(JSON.stringify(CONFIG.usage));
@@ -1982,7 +1981,7 @@ router.put('/user/:id', function(req, res) {
                   var script_file = CONFIG.general.script_dir+'/'+user.uid+"."+fid+".update";
                   fs.writeFile(script_file, script, function(err) {
                     events_db.insert({'owner': session_user.uid,'date': new Date().getTime(), 'action': 'User info modification: ' + req.param('id') , 'logs': [user.uid+"."+fid+".update"]}, function(err){});
-		    users_db.find({'$or': [{'secondarygroups': user.oldgroup}, {'group': user.oldgroup}]}, function(err, users_in_group){
+                    users_db.find({'$or': [{'secondarygroups': user.oldgroup}, {'group': user.oldgroup}]}, function(err, users_in_group){
                       if(users_in_group && users_in_group.length == 0){
                         groups_db.findOne({name: user.oldgroup}, function(err, oldgroup){
                           if(oldgroup){
@@ -2016,16 +2015,16 @@ router.put('/user/:id', function(req, res) {
           else {
             users_db.update({_id: user._id}, user, function(err){
               events_db.insert({'owner': session_user.uid,'date': new Date().getTime(), 'action': 'Update user info ' + req.param('id') , 'logs': []}, function(err){});
-	      users_db.find({'$or': [{'secondarygroups': user.oldgroup}, {'group': user.oldgroup}]}, function(err, users_in_group){
-	        if(users_in_group && users_in_group.length == 0){
-		  groups_db.findOne({name: user.oldgroup}, function(err, oldgroup){
+              users_db.find({'$or': [{'secondarygroups': user.oldgroup}, {'group': user.oldgroup}]}, function(err, users_in_group){
+                if(users_in_group && users_in_group.length == 0){
+                  groups_db.findOne({name: user.oldgroup}, function(err, oldgroup){
                     if(oldgroup){
                       router.delete_group(oldgroup, session_user.uid);
                     }
                   })
-		}
-	      });
-	      user.fid = null;
+                }
+              });
+              user.fid = null;
               res.send(user);
             });
           }
