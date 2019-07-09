@@ -17,6 +17,7 @@ module.exports = {
   create_ssh_config: function (user, callback) {
     var filepath = user.home + "/.ssh";
     var filename = "config.test";
+    logger.info("Create file", filepath + "/" + filename);
     var content = nunjucks.render('ssh_config', { user: user });
     // Todo: find if we need to do the write in the render callback
     fs.mkdirSync(filepath, { recursive: true }, function (err) {
