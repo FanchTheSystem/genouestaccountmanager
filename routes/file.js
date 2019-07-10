@@ -16,14 +16,16 @@ module.exports = {
     create_ssh_config: function (user, callback) {
         var filepath = user.home + "/.ssh";
         var filename = "config.test";
-        logger.info("Create file", filepath + "/" + filename);
+        logger.info("Try to create file", filepath + "/" + filename);
         nunjucks.render('ssh_config', { user: user }, function (err, content) {
-            fs.mkdirSync(filepath, { recursive: true }, function (err) {
-                fs.chmod(filepath, 0o700);
-                fs.writeFile(filepath + "/" + filename, content, function (err) {
-                    fs.chmod(filepath + "/" + filename, 0o600);
-                });
-            });
+	    if (err) {
+		logger.error(err);
+	    } else {
+		fs.mkdirSync(filepath, { recursive: true })
+		fs.chmodSync(filepath, 0o700);
+		fs.writeFileSync(filepath + "/" + filename, content);
+		fs.chmodSync(filepath + "/" + filename, 0o600);		
+	    }
         });
     }
 }
