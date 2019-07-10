@@ -1809,10 +1809,10 @@ router.put('/user/:id/ssh', function(req, res) {
                 file.create_ssh_config('test', user)
                     .then(
                         data => { // resolve()
-                            logger.info('File Created', data);
+                            logger.info('File created for :', data);
                         })
                     .catch(error => { // reject()
-                        logger.error('template test', err);
+                        logger.error('File not created', err);
                     });
 
 
