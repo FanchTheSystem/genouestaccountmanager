@@ -1806,7 +1806,7 @@ router.put('/user/:id/ssh', function(req, res) {
                 });
 
                 // todo: remove this as it is for template test only
-                file.create_ssh_config('test', user)
+                file.create_ssh_config(user)
                     .then(
                         data => { // resolve()
                             logger.info('File created for :', data);
