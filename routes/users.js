@@ -1806,12 +1806,16 @@ router.put('/user/:id/ssh', function(req, res) {
                 });
 
                 // todo: remove this as it is for template test only
-                try {
-                    file.create_ssh_config(user);
-                }
-                catch (err) {
-                    logger.error('template test', err);
-                }
+                file.create_ssh_config('test', user)
+                    .then(
+                        data => { // resolve()
+                            logger.info('File Created', data);
+                        })
+                    .catch(error => { // reject()
+                        logger.error('template test', err);
+                    });
+
+
             });
         });
     });

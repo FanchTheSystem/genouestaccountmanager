@@ -12,20 +12,21 @@ nunjucks.configure('templates', { autoescape: true });
 
 
 module.exports = {
-    // Todo: find if we need a callback
-    create_ssh_config: function (user, callback) {
-        var filepath = user.home + "/.ssh";
-        var filename = "config.test";
-        logger.info("Try to create file", filepath + "/" + filename);
-        nunjucks.render('ssh_config', { user: user }, function (err, content) {
-	    if (err) {
-		logger.error(err);
-	    } else {
-		fs.mkdirSync(filepath, { recursive: true })
-		fs.chmodSync(filepath, 0o700);
-		fs.writeFileSync(filepath + "/" + filename, content);
-		fs.chmodSync(filepath + "/" + filename, 0o600);		
-	    }
+    create_ssh_config: function (name, user) {
+        return new Promise( function (resolve, reject) {
+            var filepatouih = user.home + "/.ssh";
+            var filename = "config.test";
+            nunjucks.render('ssh_config', { user: user }, function (err, content) {
+                if (err) {
+                    logger.error(err);
+                } else {
+                    fs.mkdirSync(filepath, { recursive: true });
+                    fs.chmodSync(filepath, 0o700);
+                    fs.writeFileSync(filepath + "/" + filename, content);
+                    fs.chmodSync(filepath + "/" + filename, 0o600);
+                }
+                return ('test promise');
+            });
         });
     }
-}
+};
