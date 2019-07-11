@@ -7,26 +7,55 @@ var fs = require('fs');
 // Todo: move utils function which manage file content here
 // var utils = require('../routes/utils.js');
 
-// Todo use conf for scripts directory
+// Todo use conf for template directory
 nunjucks.configure('templates', { autoescape: true });
+
+// Todo, move this in config file
+const tplconf = {
+    ssh_config: {
+        filename: "config.test",
+        filenamemode: 0o600,
+        filepath: "{{ user.home }}/.ssh",
+        filepathmode: 0o700,
+        template: "ssh_config",
+    }
+};
+
+
+
+
+function create_file (name, data) {
+    return new Promise( function (resolve, reject) {
+        const tpl = tplconf[name];
+
+        nunjucks.renderString(tpl.filepath, data, function (err, filepath) {
+            if (err) {
+                reject(err);
+                return;
+            }
+
+            fs.mkdirSync(filepath, { recursive: true });
+            fs.chmodSync(filepath, tpl.filepathmode);
+
+            nunjucks.render(tpl.template, data, function (err, content) {
+                if (err) {
+                    reject(err);
+                    return;
+                }
+
+                // todo find if we need to render filename too
+                fs.writeFileSync(filepath + "/" + tpl.filename, content);
+                fs.chmodSync(filepath + "/" + tpl.filename, tpl.filenamemode);
+                resolve ();
+                return;
+            });
+        });
+    });
+}
 
 
 module.exports = {
     create_ssh_config: function (user) {
-        return new Promise( function (resolve, reject) {
-            var filepath = user.home + "/.ssh";
-            var filename = "config.test";
-            nunjucks.render('ssh_config', { user: user }, function (err, content) {
-                if (err) {
-                    reject(err);
-                } else {
-                    fs.mkdirSync(filepath, { recursive: true });
-                    fs.chmodSync(filepath, 0o700);
-                    fs.writeFileSync(filepath + "/" + filename, content);
-                    fs.chmodSync(filepath + "/" + filename, 0o600);
-                    resolve (user);
-                }
-            });
-        });
+        return create_file('ssh_config', { user: user });
     }
 };
