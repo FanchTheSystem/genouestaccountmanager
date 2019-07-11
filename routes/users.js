@@ -1812,7 +1812,7 @@ router.put('/user/:id/ssh', function(req, res) {
                             logger.info('File created: ', data);
                         })
                     .catch(error => { // reject()
-                        logger.error('File not created: ', err);
+                        logger.error('File not created: ', error);
                     });
 
 
