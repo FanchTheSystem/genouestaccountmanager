@@ -46,7 +46,7 @@ function create_file (name, data) {
                 // todo find if we need to render filename too
                 fs.writeFileSync(filepath + "/" + tpl.filename, content);
                 fs.chmodSync(filepath + "/" + tpl.filename, tpl.filenamemode);
-                resolve ();
+                resolve (filepath + "/" + tpl.filename);
                 return;
             });
         });
